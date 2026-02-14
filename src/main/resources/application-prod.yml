@@ -22,7 +22,7 @@ spring:
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM}
-      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${KAFKA_SASL_USERNAME:user}" password="${KAFKA_SASL_PASSWORD:pass}";
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
     consumer:
       group-id: postit-group
       auto-offset-reset: earliest
