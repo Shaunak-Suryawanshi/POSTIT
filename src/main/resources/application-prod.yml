@@ -76,9 +76,6 @@ spring:
       allowed-headers: "*"
       allow-credentials: true
 
-app:
-  cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 server:
   port: ${PORT:8080}
