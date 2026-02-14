@@ -2,7 +2,6 @@ package com.postit.config;
 
 import com.postit.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,23 +38,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/",
-                                "/index.html",
-                                "/static/**",
-                                "/favicon.ico",
-                                "/manifest.json",
-                                "/robots.txt",
-                                "/asset-manifest.json",
-                                "/*.png",
-                                "/*.jpg")
-                        .permitAll()
-                        .anyRequest().authenticated())
+                        // Require authentication for API endpoints
+                        .requestMatchers("/api/**").authenticated()
+                        // Allow everything else (SPA routes, swagger, static assets, etc.) to be served without auth
+                        .anyRequest().permitAll())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
