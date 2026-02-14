@@ -5,7 +5,7 @@ spring:
   data:
     mongodb:
       # Use environment variable from Railway
-      uri: ${MONGODB_URI}
+      uri: ${MONGO_URI}
       database: POSTIT
       auto-index-creation: true
 
