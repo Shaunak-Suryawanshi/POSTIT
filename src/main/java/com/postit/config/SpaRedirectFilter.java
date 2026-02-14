@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 @Slf4j
 @Component
@@ -36,9 +38,35 @@ public class SpaRedirectFilter extends OncePerRequestFilter {
             return;
         }
 
+        // If the servlet context actually has a resource at this path, don't forward.
+        try {
+            URL existing = request.getServletContext().getResource(path);
+            if (existing != null) {
+                log.debug("SpaRedirectFilter: resource exists for {}, letting it pass ({}).", path, existing);
+                filterChain.doFilter(request, response);
+                return;
+            }
+        } catch (MalformedURLException e) {
+            // ignore and continue to forward
+            log.debug("SpaRedirectFilter: error checking resource existence for {}: {}", path, e.getMessage());
+        }
+
+        // If index.html is missing, don't forward to avoid looping — pass through so container can handle
+        try {
+            URL indexUrl = request.getServletContext().getResource("/index.html");
+            if (indexUrl == null) {
+                log.warn("SpaRedirectFilter: index.html not found on classpath; cannot forward {}. Passing through.", path);
+                filterChain.doFilter(request, response);
+                return;
+            }
+        } catch (MalformedURLException e) {
+            log.warn("SpaRedirectFilter: error checking index.html existence: {}. Passing through.", e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Forward other GET requests to index.html so the client-side router can handle them
-        log.debug("Forwarding SPA route {} to /index.html", path);
+        log.info("SpaRedirectFilter: forwarding SPA route {} to /index.html", path);
         request.getRequestDispatcher("/index.html").forward(request, response);
     }
 }
-

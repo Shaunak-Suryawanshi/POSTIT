@@ -1,15 +1,14 @@
 package com.postit.config;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 public class SpaController {
 
-    @RequestMapping(value = {"/", "/{path:[^\\.]*}", "/**/{path:[^\\.]*}"}, method = RequestMethod.GET)
-    public String forwardToIndex(@PathVariable(required = false) String path) {
+    // Keep only a safe root mapping; nested SPA routes are handled by SpaRedirectFilter
+    @RequestMapping("/")
+    public String index() {
         return "forward:/index.html";
     }
 }
