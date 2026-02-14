@@ -6,7 +6,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 @Configuration
 @EnableKafka
 public class KafkaConfig {
-    // Kafka configuration is provided via application.yml
+    // Kafka configuration is provided via application.txt
     // Spring Boot auto-configuration handles the rest
 }
 
