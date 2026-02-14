@@ -27,11 +27,21 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Handle 401 Unauthorized - try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          // No refresh token available, redirect to login
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
         const response = await axios.post(`${API_URL}/auth/refresh`, {
           refreshToken,
         });
@@ -42,12 +52,20 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
+        // Refresh token failed, clear all auth data and redirect to login
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
+    }
+
+    // Handle 403 Forbidden - user doesn't have permission
+    if (error.response?.status === 403) {
+      console.error('Access forbidden:', error.response.data);
+      // Don't automatically logout on 403, let the app handle it
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

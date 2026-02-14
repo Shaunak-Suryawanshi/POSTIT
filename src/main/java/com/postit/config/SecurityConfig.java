@@ -22,7 +22,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -32,9 +31,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
-
-    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:3000}")
-    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -87,7 +83,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+
+        // Handle CORS origins - support both single origin and multiple comma-separated origins
+        String corsOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
+        if (corsOrigins == null || corsOrigins.isEmpty()) {
+            corsOrigins = "http://localhost:3000";
+        }
+
+        // Split by comma and add each origin
+        if (corsOrigins.contains(",")) {
+            configuration.setAllowedOrigins(Arrays.asList(corsOrigins.split(",")));
+        } else {
+            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        }
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));

@@ -21,17 +21,32 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('user');
 
         if (token && storedUser) {
-            setUser(JSON.parse(storedUser));
-            // Optionally verify token is still valid
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error('Failed to parse stored user:', e);
+                logout();
+                setLoading(false);
+                return;
+            }
+
+            // Verify token is still valid by making an API call
             userAPI.getCurrentUser()
                 .then(response => {
                     setUser(response.data);
                     localStorage.setItem('user', JSON.stringify(response.data));
+                    setLoading(false);
                 })
-                .catch(() => {
-                    logout();
-                })
-                .finally(() => setLoading(false));
+                .catch((error) => {
+                    console.error('Token verification failed:', error);
+                    // Only logout if it's a 401/403, not other errors
+                    if (error.response?.status === 401 || error.response?.status === 403) {
+                        logout();
+                    } else {
+                        // For other errors, keep user logged in (network issues, etc.)
+                        setLoading(false);
+                    }
+                });
         } else {
             setLoading(false);
         }
