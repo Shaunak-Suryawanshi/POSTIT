@@ -93,14 +93,20 @@ public class SecurityConfig {
         // Split by comma and add each origin
         if (corsOrigins.contains(",")) {
             configuration.setAllowedOrigins(Arrays.asList(corsOrigins.split(",")));
-        } else {
+            configuration.setAllowCredentials(true);
+        } else if (corsOrigins.equals("*")) {
+            // If wildcard, don't allow credentials
             configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+            configuration.setAllowCredentials(false);
+        } else {
+            // Specific origin
+            configuration.setAllowedOrigins(Arrays.asList(corsOrigins));
+            configuration.setAllowCredentials(true);
         }
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

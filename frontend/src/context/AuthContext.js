@@ -116,7 +116,11 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await authAPI.logout();
+            // Try to logout on server, but don't wait or fail if it doesn't work
+            authAPI.logout().catch(() => {
+                // Server logout failed, but that's okay
+                // Frontend will clear tokens anyway
+            });
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
@@ -124,6 +128,8 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');
             setUser(null);
+        }
+    };
         }
     };
 

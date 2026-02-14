@@ -36,9 +36,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@AuthenticationPrincipal UserDetails userDetails) {
-        // Get user ID from username - you'll need to implement this
-        // For now, we'll just return OK
+    public ResponseEntity<Void> logout() {
+        // Logout endpoint doesn't require authentication
+        // Frontend just clears localStorage
+        // No server-side session to invalidate
         return ResponseEntity.ok().build();
     }
 }
