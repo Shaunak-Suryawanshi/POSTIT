@@ -30,7 +30,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
-            
+            String path = request.getRequestURI();
+
             if (StringUtils.hasText(jwt)) {
                 if (tokenProvider.validateToken(jwt)) {
                     String username = tokenProvider.getUsernameFromToken(jwt);
@@ -43,11 +44,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.debug("Set user authentication for user: {}", username);
                 } else {
-                    log.warn("JWT token validation failed for token: {}", jwt.substring(0, Math.min(20, jwt.length())) + "...");
+                    log.warn("JWT token validation failed for token: {}...", jwt.substring(0, Math.min(20, jwt.length())));
                     SecurityContextHolder.clearContext();
                 }
             } else {
-                log.debug("No JWT token found in request for path: {}", request.getRequestURI());
+                // Only log missing JWT for API requests to avoid noisy logs from static assets / SPA routes
+                if (path != null && path.startsWith("/api")) {
+                    log.debug("No JWT token found in request for path: {}", path);
+                }
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context for path: {}",
