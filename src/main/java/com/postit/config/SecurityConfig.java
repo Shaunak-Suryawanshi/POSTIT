@@ -4,6 +4,7 @@ import com.postit.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -38,7 +39,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Require authentication for API endpoints
+                        // Allow CORS preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Explicitly permit auth endpoints
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout").permitAll()
+                        // Also permit any other auth subpaths just in case
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // Require authentication for other API endpoints
                         .requestMatchers("/api/**").authenticated()
                         // Allow everything else (SPA routes, swagger, static assets, etc.) to be served without auth
                         .anyRequest().permitAll())
@@ -73,21 +80,23 @@ public class SecurityConfig {
         // Handle CORS origins - support both single origin and multiple comma-separated origins
         String corsOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
         if (corsOrigins == null || corsOrigins.isEmpty()) {
-            corsOrigins = "http://localhost:3000";
-        }
-
-        // Split by comma and add each origin
-        if (corsOrigins.contains(",")) {
-            configuration.setAllowedOrigins(Arrays.asList(corsOrigins.split(",")));
-            configuration.setAllowCredentials(true);
-        } else if (corsOrigins.equals("*")) {
-            // If wildcard, don't allow credentials
+            // default to allowing any origin patterns (useful in deployed environments where origin varies)
             configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-            configuration.setAllowCredentials(false);
-        } else {
-            // Specific origin
-            configuration.setAllowedOrigins(Arrays.asList(corsOrigins));
             configuration.setAllowCredentials(true);
+        } else {
+            // Split by comma and add each origin
+            if (corsOrigins.contains(",")) {
+                configuration.setAllowedOrigins(Arrays.asList(corsOrigins.split(",")));
+                configuration.setAllowCredentials(true);
+            } else if (corsOrigins.equals("*")) {
+                // wildcard specified explicitly
+                configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+                configuration.setAllowCredentials(false);
+            } else {
+                // Specific origin
+                configuration.setAllowedOrigins(Arrays.asList(corsOrigins));
+                configuration.setAllowCredentials(true);
+            }
         }
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
