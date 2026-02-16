@@ -48,8 +48,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.clearContext();
                 }
             } else {
-                // Only log missing JWT for API requests to avoid noisy logs from static assets / SPA routes
-                if (path != null && path.startsWith("/api")) {
+                // Only log missing JWT for API requests that are expected to be protected.
+                // Don't log for public auth endpoints (e.g. /api/auth/login, /api/auth/register)
+                if (path != null && path.startsWith("/api") && !path.startsWith("/api/auth")) {
                     log.debug("No JWT token found in request for path: {}", path);
                 }
             }
